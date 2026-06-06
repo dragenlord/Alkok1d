@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALKA — Админ | Создать ингредиент</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; background: #050a12; overflow-x: hidden; }
+        .bottle-wall { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 30px; padding: 50px; background: #050a12; }
+        .bg-bottle { width: 160px; height: auto; object-fit: contain; border-radius: 28px; filter: blur(6px) brightness(0.5) hue-rotate(180deg) saturate(1.5); opacity: 0.7; background: rgba(5,15,28,0.3); backdrop-filter: blur(2px); }
+        .top-nav { position: fixed; top: 0; left: 0; width: 100%; z-index: 100; background: rgba(5,15,25,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(0,150,255,0.4); padding: 0.75rem 1rem; }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.5rem 1rem; }
+        .nav-link { color: #b8e2ff; text-decoration: none; font-size: 0.9rem; font-weight: 500; padding: 0.5rem 1rem; border-radius: 40px; transition: all 0.2s ease; background: rgba(0,50,80,0.4); border: 1px solid rgba(0,150,255,0.3); backdrop-filter: blur(4px); white-space: nowrap; }
+        .nav-link:hover { background: rgba(0,150,255,0.3); border-color: #4cc9ff; color: white; transform: translateY(-2px); }
+        .nav-link.active { background: linear-gradient(135deg, #0a4d8c, #0066aa); border-color: #4cc9ff; color: white; }
+        .content-wrapper { margin-top: 70px; position: relative; z-index: 20; min-height: calc(100vh - 70px); padding: 2rem; }
+        @media (max-width: 700px) { .content-wrapper { margin-top: 80px; padding: 1rem; } }
+        .main-container { max-width: 800px; margin: 0 auto; }
+        .page-header { text-align: center; margin-bottom: 2rem; }
+        .page-header h1 { color: #4cc9ff; font-size: 2rem; text-shadow: 0 0 5px rgba(76,201,255,0.3); }
+        .page-header p { color: #8ec9ff; font-size: 0.9rem; }
+        .form-card { background: rgba(5,15,28,0.85); backdrop-filter: blur(16px); border-radius: 28px; border: 1px solid rgba(0,150,255,0.2); padding: 2rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; color: #4cc9ff; font-weight: 500; margin-bottom: 0.5rem; }
+        .form-input, .form-textarea { width: 100%; padding: 0.8rem 1rem; background: rgba(0,30,50,0.6); border: 1px solid rgba(0,150,255,0.3); border-radius: 16px; color: #e0f0ff; font-size: 1rem; transition: all 0.2s; }
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: #4cc9ff; box-shadow: 0 0 10px rgba(76,201,255,0.3); background: rgba(0,40,70,0.7); }
+        .form-textarea { resize: vertical; min-height: 100px; }
+        .image-hint { background: rgba(0,60,90,0.4); border-radius: 16px; padding: 0.8rem; margin-top: 0.5rem; font-size: 0.8rem; color: #8ec9ff; }
+
+        .file-upload-wrapper {
+            position: relative;
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 0.8rem;
+        }
+        .file-upload-wrapper input[type="file"] {
+            flex: 2;
+            min-width: 200px;
+        }
+        .file-name-wrapper {
+            flex: 2;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            background: rgba(0, 30, 50, 0.6);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            border-radius: 16px;
+            padding: 0.3rem 0.3rem 0.3rem 1rem;
+            min-width: 200px;
+        }
+        .file-name-wrapper span {
+            color: #8ec9ff;
+            font-size: 1.1rem;
+        }
+        .file-name-edit {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #4cc9ff;
+            font-size: 0.85rem;
+            padding: 0.5rem 0;
+            outline: none;
+            min-width: 120px;
+        }
+        .file-name-edit:focus {
+            border-bottom: 1px solid #4cc9ff;
+        }
+        .file-name-edit::placeholder {
+            color: #6e9ec5;
+            opacity: 0.6;
+        }
+        .file-name-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.8rem;
+            background: rgba(0, 30, 50, 0.6);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            border-radius: 16px;
+            color: #8ec9ff;
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-name-display span {
+            color: #4cc9ff;
+            font-weight: 500;
+        }
+        .file-name-display.empty {
+            color: #6e9ec5;
+            opacity: 0.6;
+        }
+        .file-size-badge {
+            font-size: 0.7rem;
+            background: rgba(0,150,255,0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            margin-left: 0.5rem;
+        }
+        .edit-name-btn {
+            background: rgba(0, 150, 255, 0.2);
+            border: 1px solid rgba(0, 150, 255, 0.4);
+            color: #4cc9ff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.75rem;
+        }
+        .edit-name-btn:hover {
+            background: rgba(0, 150, 255, 0.4);
+        }
+        @media (max-width: 700px) {
+            .file-upload-wrapper {
+                flex-direction: column;
+            }
+            .file-upload-wrapper input[type="file"],
+            .file-name-wrapper {
+                width: 100%;
+            }
+        }
+
+        .submit-btn { width: 100%; background: linear-gradient(135deg, #0a4d8c, #0066aa); border: none; padding: 1rem; border-radius: 40px; color: white; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,150,255,0.3); }
+        .back-link { display: inline-block; margin-top: 1.5rem; color: #8ec9ff; text-decoration: none; }
+        .back-link:hover { color: #4cc9ff; }
+        .success-message { background: rgba(0,200,150,0.2); border: 1px solid #00cc88; color: #88ffcc; padding: 1rem; border-radius: 20px; margin-bottom: 1.5rem; text-align: center; }
+        .error-message { color: #ff8888; font-size: 0.8rem; margin-top: 0.3rem; }
+    </style>
+</head>
+<body>
+
+<div class="bottle-wall" id="bottleWall"></div>
+
+<div class="top-nav">
+    <div class="nav-container">
+        <a class="nav-link" th:href="@{/main}">🏠 Главная</a>
+        <a class="nav-link" th:href="@{/level}">🍾 Уровни</a>
+        <a class="nav-link" th:href="@{/assortment}">🍷 Ассортимент</a>
+        <a class="nav-link" th:href="@{/profile}">👤 Профиль</a>
+        <a class="nav-link active" th:href="@{/admin/create}">👑 Админ-панель</a>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div class="main-container">
+        <div class="page-header">
+            <h1>🧪 Создание ингредиента / напитка</h1>
+            <p>Добавьте новый продукт в ассортимент бара</p>
+        </div>
+
+        <div th:if="${success}" class="success-message">
+            ✅ Ингредиент успешно добавлен!
+        </div>
+
+        <div class="form-card">
+            <form th:action="@{/create/assortments}" th:method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">🏷️ Название *</label>
+                    <input type="text" name="name" class="form-input" required placeholder="например: Ром Bacardi, Сок апельсиновый, Лед">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">📝 Описание</label>
+                    <textarea name="description" class="form-textarea" placeholder="Бренд, страна происхождения, особенности вкуса..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">💰 Цена (₽) *</label>
+                    <input type="number" name="price" class="form-input" required step="1" min="0" placeholder="250">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">📦 Количество на складе *</label>
+                    <input type="number" name="count" class="form-input" required step="1" min="0" placeholder="100">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">🖼️ Изображение (файл)</label>
+
+                    <div class="file-upload-wrapper">
+                        <input type="file" name="imageFile" class="form-input" accept="image/*" id="imageFileInput">
+
+                        <div class="file-name-wrapper" id="fileNameWrapper" style="display: none;">
+                            <span>📄</span>
+                            <input type="text" id="filename" name="filename" class="file-name-edit" placeholder="введите имя файла">
+                            <span class="file-size-badge" id="fileSizeBadge"></span>
+                            <button type="button" class="edit-name-btn" id="applyFileName">✓</button>
+                        </div>
+
+                        <div class="file-name-display empty" id="fileNameDisplay">
+                            📄 <span>Файл не выбран</span>
+                        </div>
+                    </div>
+
+                    <div class="image-hint">
+                        💡 Поддерживаемые форматы: PNG, JPG, JPEG. Максимальный размер: 10MB<br>
+                        ✏️ После выбора файла вы можете изменить его имя перед сохранением
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">✨ Добавить в ассортимент</button>
+            </form>
+            <a th:href="@{/admin/dashboard}" class="back-link">← Вернуться в админ-панель</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const bottleWall = document.getElementById('bottleWall');
+    const bottles = ['/images/vodka.png', '/images/bottle.png', '/images/finsky-ice.jpeg', '/images/stakan.png', '/images/redbull.png'];
+    for (let i = 0; i < 28; i++) {
+        const img = document.createElement('img');
+        img.classList.add('bg-bottle');
+        img.src = bottles[i % bottles.length];
+        img.onerror = function() { this.style.display = 'none'; };
+        img.style.transform = `rotate(${(Math.random() - 0.5) * 12}deg) scale(${0.7 + Math.random() * 0.7})`;
+        img.style.width = `${120 + Math.random() * 70}px`;
+        bottleWall.appendChild(img);
+    }
+
+    const fileInput = document.getElementById('imageFileInput');
+    const fileNameWrapper = document.getElementById('fileNameWrapper');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const filenameInput = document.getElementById('filename');
+    const fileSizeBadge = document.getElementById('fileSizeBadge');
+    const applyFileNameBtn = document.getElementById('applyFileName');
+
+    let currentFile = null;
+    let originalFileName = '';
+    let fileExtension = '';
+
+    function getFileExtension(filename) {
+        return filename.includes('.') ? filename.substring(filename.lastIndexOf('.')) : '';
+    }
+
+    function getNameWithoutExtension(filename) {
+        if (filename.includes('.')) {
+            return filename.substring(0, filename.lastIndexOf('.'));
+        }
+        return filename;
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (file) {
+                currentFile = file;
+                originalFileName = file.name;
+                fileExtension = getFileExtension(originalFileName);
+                const fileNameWithoutExt = getNameWithoutExtension(originalFileName);
+                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+
+                fileNameWrapper.style.display = 'flex';
+                fileNameDisplay.style.display = 'none';
+
+                filenameInput.value = fileNameWithoutExt;
+                fileSizeBadge.textContent = `${fileSizeMB} MB`;
+
+                if (file.size > 10 * 1024 * 1024) {
+                    fileNameWrapper.style.borderColor = '#ff8888';
+                    alert('⚠️ Файл слишком большой! Максимальный размер: 10MB');
+                } else {
+                    fileNameWrapper.style.borderColor = 'rgba(0, 150, 255, 0.3)';
+                }
+            } else {
+                fileNameWrapper.style.display = 'none';
+                fileNameDisplay.style.display = 'flex';
+                fileNameDisplay.innerHTML = '📄 <span>Файл не выбран</span>';
+                fileNameDisplay.classList.add('empty');
+                currentFile = null;
+                filenameInput.value = '';
+            }
+        });
+    }
+
+    if (applyFileNameBtn) {
+        applyFileNameBtn.addEventListener('click', function() {
+            if (!currentFile) {
+                alert('Сначала выберите файл');
+                return;
+            }
+
+            let newName = filenameInput.value.trim();
+
+            if (!newName) {
+                alert('Введите имя файла');
+                return;
+            }
+
+            newName = newName.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s_-]/g, '');
+
+            if (!newName) {
+                alert('Имя содержит недопустимые символы. Используйте буквы, цифры, пробелы, _ и -');
+                return;
+            }
+
+            const finalFileName = newName + fileExtension;
+
+            fileNameDisplay.innerHTML = `📄 <span>${finalFileName}</span>`;
+            fileNameDisplay.classList.remove('empty');
+
+            // Сохраняем имя в поле filename для отправки на сервер
+            filenameInput.value = finalFileName;
+
+            fileNameWrapper.style.display = 'none';
+            fileNameDisplay.style.display = 'flex';
+
+            console.log(`Имя файла изменено: ${originalFileName} → ${finalFileName}`);
+        });
+    }
+
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            const file = fileInput ? fileInput.files[0] : null;
+            if (file && file.size > 10 * 1024 * 1024) {
+                event.preventDefault();
+                alert('❌ Файл слишком большой! Максимальный размер: 10MB');
+            }
+            if (filenameInput.value) {
+                console.log('Отправка с именем файла:', filenameInput.value);
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

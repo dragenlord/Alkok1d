@@ -1,10 +1,411 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ALKA — Выбор уровня</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            background: #050a12;
+            overflow-x: hidden;
+        }
+
+        /* ========= ФОН ========= */
+        .bottle-wall {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            padding: 50px;
+            background: #050a12;
+        }
+
+        .bg-bottle {
+            width: 160px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 28px;
+            filter: blur(6px) brightness(0.5) hue-rotate(180deg) saturate(1.5);
+            transform: rotate(2deg);
+            opacity: 0.7;
+        }
+
+        /* ========= ВЕРХНЯЯ НАВИГАЦИОННАЯ ПАНЕЛЬ ========= */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            background: rgba(5, 15, 25, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 150, 255, 0.4);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            padding: 0.75rem 1rem;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem 1rem;
+        }
+
+        .nav-link {
+            color: #b8e2ff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+            background: rgba(0, 50, 80, 0.4);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: rgba(0, 150, 255, 0.3);
+            border-color: #4cc9ff;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,150,255,0.2);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #0a4d8c, #0066aa);
+            border-color: #4cc9ff;
+            color: white;
+            box-shadow: 0 0 12px rgba(76,201,255,0.3);
+        }
+
+        .content-wrapper {
+            margin-top: 70px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 20;
+            min-height: calc(100vh - 70px);
+            padding: 2rem;
+        }
+
+        @media (max-width: 700px) {
+            .nav-container { gap: 0.4rem; }
+            .nav-link { font-size: 0.7rem; padding: 0.35rem 0.7rem; }
+            .content-wrapper { margin-top: 80px; padding: 1rem; }
+        }
+
+        /* ========= СТРАНИЦА ВЫБОРА УРОВНЯ ========= */
+        .level-screen {
+            width: 100%;
+            background: rgba(3, 10, 20, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 64px;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .cards-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            width: 100%;
+            min-height: 80vh;
+        }
+
+        .giant-card {
+            flex: 1;
+            min-width: 0;
+            width: 33.333%;
+            background: rgba(5, 15, 28, 0.85);
+            backdrop-filter: blur(16px);
+            margin: 0;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-left: 1px solid rgba(0, 150, 255, 0.2);
+            border-right: 1px solid rgba(0, 150, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .giant-card:first-child { border-radius: 48px 0 0 48px; }
+        .giant-card:last-child { border-radius: 0 48px 48px 0; }
+
+        .giant-card:hover {
+            background: rgba(0, 80, 150, 0.35);
+            box-shadow: 0 0 40px rgba(0, 150, 255, 0.3);
+            transform: scale(1.02);
+            border-color: #00a6ff;
+        }
+
+        .giant-bottle-img {
+            width: 75%;
+            max-width: 200px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 25px rgba(0,0,0,0.6));
+            margin-bottom: 1.5rem;
+            border-radius: 48px;
+            background: #07121f;
+            padding: 8px;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+
+        .giant-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #4cc9ff, #0088dd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0.5rem 0;
+        }
+
+        .giant-sub {
+            font-size: 0.9rem;
+            color: #4cc9ff;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            display: inline-block;
+            margin: 0.5rem 0;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+
+        .info-block {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 32px;
+            padding: 0.8rem;
+            margin: 1rem 0;
+            width: 90%;
+            font-size: 0.8rem;
+            color: #8ec9ff;
+            border: 1px solid rgba(0, 150, 255, 0.2);
+        }
+
+        .select-card-btn {
+            background: linear-gradient(135deg, #0a1a2e, #051020);
+            border: 1px solid #00a6ff;
+            color: #4cc9ff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.7rem 1rem;
+            border-radius: 60px;
+            width: 80%;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        .select-card-btn:hover {
+            background: #00a6ff;
+            color: #050a12;
+            border-color: #4cc9ff;
+            transform: scale(1.02);
+            box-shadow: 0 0 12px #00a6ff;
+        }
+
+        .back-bottom {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        .back-flat {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00a6ff;
+            color: #4cc9ff;
+            padding: 0.7rem 2.5rem;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 1rem;
+            backdrop-filter: blur(4px);
+            font-family: inherit;
+            letter-spacing: 1px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-flat:hover {
+            background: rgba(0, 100, 200, 0.3);
+            border-color: #4cc9ff;
+            color: #ffffff;
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 700px) {
+            .cards-row { flex-direction: column; }
+            .giant-card { width: 100%; border-radius: 48px !important; margin-bottom: 1rem; }
+            .level-screen { padding: 1rem; }
+        }
+    </style>
 </head>
 <body>
-$END$
+
+<!-- ФОН -->
+<div class="bottle-wall" id="bottleWall"></div>
+
+<!-- ВЕРХНЯЯ НАВИГАЦИОННАЯ ПАНЕЛЬ -->
+<div class="top-nav">
+    <div class="nav-container">
+        <a class="nav-link" href="/main">🏠 Главная</a>
+        <a class="nav-link active" href="/level">🍾 Уровни</a>
+        <a class="nav-link" href="/assortment">🍷 Ассортимент</a>
+        <a class="nav-link" href="/cocktails">🍹 Коктейли</a>
+        <a class="nav-link" href="/profile">👤 Профиль</a>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <!-- СТРАНИЦА ВЫБОРА УРОВНЯ -->
+    <div class="level-screen">
+        <div class="cards-row" id="cardsRow"></div>
+        <div class="back-bottom">
+            <a href="/main" class="back-flat">← НА ГЛАВНУЮ</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Декоративный фон
+    const localBottles = [
+        '/static/images/vodka.png',
+        '/static/images/bottle.png',
+        '/static/images/finsky-ice.jpeg',
+        '/static/images/stakan.png',
+        '/static/images/redbull.png'
+    ];
+
+    const bgWall = document.getElementById('bottleWall');
+    for (let i = 0; i < 28; i++) {
+        const img = document.createElement('img');
+        img.classList.add('bg-bottle');
+        img.src = localBottles[i % localBottles.length];
+        img.onerror = function() { this.style.display = 'none'; };
+        const rot = (Math.random() - 0.5) * 12;
+        const sc = 0.7 + Math.random() * 0.7;
+        img.style.transform = `rotate(${rot}deg) scale(${sc})`;
+        img.style.width = `${120 + Math.random() * 70}px`;
+        bgWall.appendChild(img);
+    }
+
+    // Данные карточекНа
+    const drinksData = [
+        {
+            id: 'easy',
+            name: 'ЛЁГКАЯ',
+            desc: 'Phenix · Hoegaarden',
+            info: 'Солод, хмель, ячмень. 4.7%',
+            imgSrc: '/images/phenix-beer.jfif',
+            fallback: '🍺',
+            url: '/level/easy'
+        },
+        {
+            id: 'medium',
+            name: 'СРЕДНЯЯ',
+            desc: 'Barrister Collection',
+            info: 'Можжевельник, кардамон. 40–43%',
+            imgSrc: '/images/barrister-blue.jfif',
+            fallback: '🍸',
+            url: '/level/medium'
+        },
+        {
+            id: 'hard',
+            name: 'СЛОЖНАЯ',
+            desc: 'Finland Ice',
+            info: 'Ледяная фильтрация. 40%',
+            imgSrc: '/images/finland-ice.png',
+            fallback: '🧊',
+            url: '/level/hard'
+        }
+    ];
+
+    function navigateToLevel(url, levelName) {
+        if (!url) return;
+        window.location.href = url;
+    }
+
+    function renderGiantCards() {
+        const cardsRow = document.getElementById('cardsRow');
+        if (!cardsRow) return;
+        cardsRow.innerHTML = '';
+
+        drinksData.forEach(drink => {
+            const card = document.createElement('div');
+            card.className = 'giant-card';
+
+            const img = document.createElement('img');
+            img.src = drink.imgSrc;
+            img.alt = drink.name;
+            img.className = 'giant-bottle-img';
+            img.onerror = () => {
+                img.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 160'%3E%3Crect width='120' height='160' fill='%230a1a3a'/%3E%3Ctext x='60' y='80' fill='%234cc9ff' font-size='12' text-anchor='middle'%3E${drink.fallback}%3C/text%3E%3C/svg%3E`;
+            };
+
+            const title = document.createElement('div');
+            title.className = 'giant-title';
+            title.innerText = drink.name;
+
+            const sub = document.createElement('div');
+            sub.className = 'giant-sub';
+            sub.innerText = drink.desc;
+
+            const infoBlock = document.createElement('div');
+            infoBlock.className = 'info-block';
+            infoBlock.innerText = drink.info;
+
+            const selectBtn = document.createElement('button');
+            selectBtn.innerText = 'ВЫБРАТЬ УРОВЕНЬ →';
+            selectBtn.className = 'select-card-btn';
+            selectBtn.onclick = (e) => {
+                e.stopPropagation();
+                navigateToLevel(drink.url, drink.name);
+            };
+
+            card.onclick = (e) => {
+                if (e.target === selectBtn || selectBtn.contains(e.target)) return;
+                navigateToLevel(drink.url, drink.name);
+            };
+
+            card.append(img, title, sub, infoBlock, selectBtn);
+            cardsRow.appendChild(card);
+        });
+    }
+
+    // Рендерим карточки
+    renderGiantCards();
+</script>
 </body>
 </html>

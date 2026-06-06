@@ -1,14 +1,16 @@
 package ru.nizhniynovgorod.alkomashin.entity;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
-@Table()
 @Entity
-public class Assortement extends  IdEntity {
-
+@Table(name = "assortement", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "name")  // 👈 имя ингредиента должно быть уникальным
+})
+public class Assortement extends IdEntity {
 
     private String name;
     private String description;
@@ -16,4 +18,6 @@ public class Assortement extends  IdEntity {
     private int count;
     private String image;
 
+    @ManyToMany(mappedBy = "ingredients")
+    private List<Cocktail> cocktails = new ArrayList<>();
 }
