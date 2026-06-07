@@ -18,6 +18,6 @@ public class Assortement extends IdEntity {
     private int count;
     private String image;
 
-    @ManyToMany(mappedBy = "ingredients")
+    @ManyToMany(mappedBy = "assortements")
     private List<Cocktail> cocktails = new ArrayList<>();
 }

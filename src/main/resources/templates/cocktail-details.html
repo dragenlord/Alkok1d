@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title th:text="'ALKA — ' + ${cocktail.cocktailName} + ' | Детальный рецепт'">ALKA — Детали коктейля</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            background: #050a12;
+            overflow-x: hidden;
+        }
+
+        .bottle-wall {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            padding: 50px;
+            background: #050a12;
+        }
+
+        .bg-bottle {
+            width: 160px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 28px;
+            filter: blur(6px) brightness(0.5) hue-rotate(180deg) saturate(1.5);
+            transform: rotate(2deg);
+            opacity: 0.7;
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            background: rgba(5, 15, 25, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 150, 255, 0.4);
+            padding: 0.75rem 1rem;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem 1rem;
+        }
+
+        .nav-link {
+            color: #b8e2ff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            transition: all 0.2s ease;
+            background: rgba(0, 50, 80, 0.4);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(0, 150, 255, 0.3);
+            border-color: #4cc9ff;
+            color: white;
+        }
+
+        .content-wrapper {
+            margin-top: 70px;
+            position: relative;
+            z-index: 20;
+            padding: 2rem;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Детальная карточка */
+        .detail-card {
+            background: rgba(5, 15, 28, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 32px;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .detail-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .detail-header {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+        }
+
+        .detail-image {
+            background: linear-gradient(135deg, #0a2a4a, #051020);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .detail-image img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .detail-image .emoji-fallback {
+            font-size: 8rem;
+            text-shadow: 0 0 10px rgba(76,201,255,0.5);
+        }
+
+        .detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .cocktail-name {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4cc9ff;
+            margin-bottom: 0.5rem;
+        }
+
+        .cocktail-description {
+            color: #b8e2ff;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .info-item {
+            background: rgba(0, 50, 80, 0.4);
+            padding: 0.8rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(0, 150, 255, 0.2);
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #8ec9ff;
+            margin-bottom: 0.3rem;
+        }
+
+        .info-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #4cc9ff;
+        }
+
+        /* Секции */
+        .section {
+            background: rgba(0, 40, 60, 0.3);
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #4cc9ff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ingredients-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .ingredient-item {
+            background: rgba(0, 30, 50, 0.6);
+            border-radius: 16px;
+            padding: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s;
+        }
+
+        .ingredient-item:hover {
+            background: rgba(0, 80, 150, 0.3);
+            transform: translateX(5px);
+        }
+
+        .ingredient-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(0, 150, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .ingredient-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .ingredient-info {
+            flex: 1;
+        }
+
+        .ingredient-name {
+            font-weight: 600;
+            color: #4cc9ff;
+        }
+
+        .ingredient-price {
+            font-size: 0.8rem;
+            color: #8ec9ff;
+        }
+
+        /* Шаги приготовления */
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 1rem;
+            background: rgba(0, 30, 50, 0.4);
+            border-radius: 20px;
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #0a4d8c, #0066aa);
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-description {
+            color: #e0f0ff;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00a6ff;
+            color: #4cc9ff;
+            padding: 0.7rem 2rem;
+            border-radius: 40px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 100, 200, 0.3);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #ff8888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bottle-wall" id="bottleWall"></div>
+
+<div class="top-nav">
+    <div class="nav-container">
+        <a class="nav-link" th:href="@{/main}">🏠 Главная</a>
+        <a class="nav-link" th:href="@{/level}">🍾 Уровни</a>
+        <a class="nav-link" th:href="@{/assortment}">🍷 Ассортимент</a>
+        <a class="nav-link active" th:href="@{/cocktails}">🍸 Коктейли</a>
+        <a class="nav-link" th:href="@{/profile}">👤 Профиль</a>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div class="main-container">
+        <div th:if="${cocktail != null}" class="detail-card">
+            <!-- Шапка с фото и основной информацией -->
+            <div class="detail-header">
+                <div class="detail-image">
+                    <th:block th:if="${cocktail.image != null and cocktail.image != ''}">
+                        <img th:src="@{'/images/' + ${cocktail.image}}"
+                             th:alt="${cocktail.cocktailName}"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'emoji-fallback\'>🍸</div>';">
+                    </th:block>
+                    <th:block th:unless="${cocktail.image != null and cocktail.image != ''}">
+                        <div class="emoji-fallback">🍸</div>
+                    </th:block>
+                </div>
+
+                <div class="detail-info">
+                    <div class="cocktail-name" th:text="${cocktail.cocktailName}">Название</div>
+                    <div class="cocktail-description" th:text="${cocktail.description != null ? cocktail.description : 'Описание отсутствует'}">
+                        Описание
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">💰 Цена</div>
+                            <div class="info-value" th:text="${cocktail.price} + ' ₽'">0 ₽</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">🥤 Объем</div>
+                            <div class="info-value" th:text="${cocktail.volume} + ' мл'">0 мл</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">🍺 Крепость</div>
+                            <div class="info-value" th:text="${cocktail.vol} + '°'">0°</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">📦 В наличии</div>
+                            <div class="info-value" th:text="${cocktail.count} + ' шт'">0 шт</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ингредиенты -->
+            <div class="section">
+                <div class="section-title">
+                    🧪 Ингредиенты
+                </div>
+
+                <div th:if="${cocktail.assortements != null and !cocktail.assortements.empty}" class="ingredients-list">
+                    <div th:each="ingredient : ${cocktail.assortements}" class="ingredient-item">
+                        <div class="ingredient-img">
+                            <th:block th:if="${ingredient.image != null and ingredient.image != ''}">
+                                <img th:src="@{'/images/' + ${ingredient.image}}"
+                                     th:alt="${ingredient.name}"
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='🍾';">
+                            </th:block>
+                            <th:block th:unless="${ingredient.image != null and ingredient.image != ''}">
+                                🍾
+                            </th:block>
+                        </div>
+                        <div class="ingredient-info">
+                            <div class="ingredient-name" th:text="${ingredient.name}">Название</div>
+                            <div class="ingredient-price" th:text="${ingredient.price} + ' ₽ за шт'">0 ₽</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:unless="${cocktail.assortements != null and !cocktail.assortements.empty}" class="empty-state">
+                    🚫 Ингредиенты не добавлены
+                </div>
+            </div>
+
+            <!-- Шаги приготовления -->
+            <div class="section">
+                <div class="section-title">
+                    📋 Приготовление
+                </div>
+
+                <div th:if="${cocktail.steps != null and !cocktail.steps.empty}" class="steps-list">
+                    <div th:each="step : ${cocktail.steps}" class="step-item">
+                        <div class="step-number" th:text="${step.stepNumber}">1</div>
+                        <div class="step-content">
+                            <div class="step-description" th:text="${step.description}">Описание шага</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:unless="${cocktail.steps != null and !cocktail.steps.empty}" class="empty-state">
+                    🚫 Рецепт приготовления не добавлен
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${cocktail == null}" class="empty-state">
+            🚫 Коктейль не найден
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a th:href="@{/cocktails}" class="back-button">← К списку коктейлей</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const localBottles = ['/images/vodka.png', '/images/bottle.png', '/images/finsky-ice.jpeg', '/images/stakan.png', '/images/redbull.png'];
+    const bgWall = document.getElementById('bottleWall');
+    for (let i = 0; i < 28; i++) {
+        const img = document.createElement('img');
+        img.classList.add('bg-bottle');
+        img.src = localBottles[i % localBottles.length];
+        img.onerror = function() { this.style.display = 'none'; };
+        const rot = (Math.random() - 0.5) * 12;
+        const sc = 0.7 + Math.random() * 0.7;
+        img.style.transform = `rotate(${rot}deg) scale(${sc})`;
+        img.style.width = `${120 + Math.random() * 70}px`;
+        bgWall.appendChild(img);
+    }
+</script>
+
+</body>
+</html>

@@ -5,8 +5,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import org.springframework.web.bind.annotation.PathVariable;
 import ru.nizhniynovgorod.alkomashin.entity.Assortement;
+import ru.nizhniynovgorod.alkomashin.entity.Cocktail;
 import ru.nizhniynovgorod.alkomashin.repository.AssortmentRepository;
+import ru.nizhniynovgorod.alkomashin.repository.CocktailRepository;
 
 import java.util.List;
 
@@ -16,6 +19,7 @@ public class ShowPage {
 
 
     private final AssortmentRepository assortmentRepository;
+    private final CocktailRepository cocktailRepository;
 
     @GetMapping("/main")
     public String MainPageController(){
@@ -30,10 +34,18 @@ public class ShowPage {
     }
 
     @GetMapping("/cocktails")
-    public String ShowPageCocktails(){
-
+    public String getAllCocktails(Model model) {
+        List<Cocktail> cocktails = cocktailRepository.findAll();
+        model.addAttribute("cocktails", cocktails);
         return "cocktails";
     }
+    @GetMapping("/cocktail/{id}")
+    public String getCocktailDetails(@PathVariable Long id, Model model) {
+        Cocktail cocktail = cocktailRepository.findById(id).orElse(null);
+        model.addAttribute("cocktail", cocktail);
+        return "cocktail-details";
+    }
+
     @GetMapping("/profile")
     public String ShowPageProfile(){
 

@@ -1,10 +1,524 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ALKA — Коктейли | Карточки коктейлей</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            background: #050a12;
+            overflow-x: hidden;
+        }
+
+        /* ========= ФОН С ИКОНКАМИ НАПИТКОВ ========= */
+        .bottle-wall {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            padding: 50px;
+            background: #050a12;
+        }
+
+        .bg-bottle {
+            width: 160px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 28px;
+            filter: blur(6px) brightness(0.5) hue-rotate(180deg) saturate(1.5);
+            transform: rotate(2deg);
+            opacity: 0.7;
+            font-size: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 15, 28, 0.3);
+            backdrop-filter: blur(2px);
+        }
+
+        /* ========= ВЕРХНЯЯ НАВИГАЦИОННАЯ ПАНЕЛЬ ========= */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            background: rgba(5, 15, 25, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 150, 255, 0.4);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            padding: 0.75rem 1rem;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem 1rem;
+        }
+
+        .nav-link {
+            color: #b8e2ff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+            background: rgba(0, 50, 80, 0.4);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            background: rgba(0, 150, 255, 0.3);
+            border-color: #4cc9ff;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,150,255,0.2);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #0a4d8c, #0066aa);
+            border-color: #4cc9ff;
+            color: white;
+            box-shadow: 0 0 12px rgba(76,201,255,0.3);
+        }
+
+        .content-wrapper {
+            margin-top: 70px;
+            flex: 1;
+            position: relative;
+            z-index: 20;
+            min-height: calc(100vh - 70px);
+            padding: 2rem;
+        }
+
+        @media (max-width: 700px) {
+            .nav-container { gap: 0.4rem; }
+            .nav-link { font-size: 0.7rem; padding: 0.35rem 0.7rem; }
+            .content-wrapper { margin-top: 80px; padding: 1rem; }
+        }
+
+        /* ========= ОСНОВНОЙ КОНТЕЙНЕР ========= */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ========= ЗАГОЛОВОК ========= */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            color: #4cc9ff;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px rgba(76,201,255,0.3);
+        }
+
+        .page-header p {
+            color: #8ec9ff;
+            font-size: 0.9rem;
+        }
+
+        /* ========= СЕТКА КАРТОЧЕК КОКТЕЙЛЕЙ ========= */
+        .cocktail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .cocktail-card {
+            background: rgba(5, 15, 28, 0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 150, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .cocktail-card:hover {
+            transform: translateY(-5px);
+            border-color: #4cc9ff;
+            box-shadow: 0 10px 30px rgba(0, 150, 255, 0.3);
+            background: rgba(0, 80, 150, 0.25);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, #0a2a4a, #051020);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .cocktail-card:hover .card-image img {
+            transform: scale(1.05);
+        }
+
+        .card-image .emoji-fallback {
+            font-size: 4rem;
+            text-shadow: 0 0 8px rgba(0,150,255,0.5);
+        }
+
+        .card-content {
+            padding: 1.2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #4cc9ff;
+            margin-bottom: 0.3rem;
+            letter-spacing: -0.2px;
+        }
+
+        .card-description {
+            color: #b8e2ff;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            opacity: 0.85;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .card-price {
+            background: rgba(0, 150, 255, 0.15);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #4cc9ff;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+        }
+
+        .card-volume {
+            background: rgba(200, 150, 0, 0.15);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #ffcc66;
+            border: 1px solid rgba(255, 200, 100, 0.3);
+        }
+
+        .card-alcohol {
+            background: rgba(150, 50, 150, 0.15);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #cc88ff;
+            border: 1px solid rgba(200, 100, 255, 0.3);
+        }
+
+        .ingredients-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(0, 150, 255, 0.2);
+        }
+
+        .ingredient-tag {
+            background: rgba(0, 200, 150, 0.15);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: #6ef0d0;
+            border-left: 2px solid #4cc9ff;
+        }
+
+        .click-hint {
+            margin-top: 0.8rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #4cc9ff;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .cocktail-card:hover .click-hint {
+            opacity: 1;
+        }
+
+        .stats {
+            text-align: center;
+            color: #8ec9ff;
+            font-size: 0.9rem;
+            padding: 0.8rem 1rem;
+            background: rgba(3, 10, 20, 0.5);
+            border-radius: 32px;
+            backdrop-filter: blur(4px);
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: #8ec9ff;
+            font-size: 1.2rem;
+            background: rgba(3, 10, 20, 0.6);
+            border-radius: 32px;
+            backdrop-filter: blur(8px);
+            border: 1px dashed #4cc9ff;
+        }
+
+        .back-bottom {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .back-flat, .create-btn {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00a6ff;
+            color: #4cc9ff;
+            padding: 0.7rem 2.5rem;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 1rem;
+            backdrop-filter: blur(4px);
+            font-family: inherit;
+            letter-spacing: 1px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-flat:hover, .create-btn:hover {
+            background: rgba(0, 100, 200, 0.3);
+            border-color: #4cc9ff;
+            color: #ffffff;
+            transform: scale(1.02);
+        }
+
+        .create-btn {
+            background: linear-gradient(135deg, #0a4d8c, #0066aa);
+            border-color: #4cc9ff;
+        }
+
+        @media (max-width: 768px) {
+            .cocktail-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1rem;
+            }
+            .card-image {
+                height: 180px;
+            }
+            .card-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .cocktail-card {
+            animation: fadeUp 0.4s ease backwards;
+        }
+    </style>
 </head>
 <body>
+
+<!-- ФОН -->
+<div class="bottle-wall" id="bottleWall"></div>
+
+<!-- ВЕРХНЯЯ НАВИГАЦИОННАЯ ПАНЕЛЬ -->
+<div class="top-nav">
+    <div class="nav-container">
+        <a class="nav-link" th:href="@{/main}">🏠 Главная</a>
+        <a class="nav-link" th:href="@{/level}">🍾 Уровни</a>
+        <a class="nav-link" th:href="@{/assortment}">🍷 Ассортимент</a>
+        <a class="nav-link active" th:href="@{/cocktails}">🍸 Коктейли</a>
+        <a class="nav-link" th:href="@{/profile}">👤 Профиль</a>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div class="main-container">
+        <div class="page-header">
+            <h1>🍸 Наши коктейли</h1>
+            <p>Авторские рецепты | Кликните на карточку для просмотра деталей</p>
+        </div>
+
+        <div class="stats" th:if="${cocktails != null and !cocktails.empty}">
+            🍹 <strong>Доступно коктейлей:</strong> <span th:text="${cocktails.size()}">0</span> |
+            🧪 Создано с любовью
+        </div>
+
+        <!-- СЕТКА КАРТОЧЕК КОКТЕЙЛЕЙ -->
+        <div class="cocktail-grid" th:if="${cocktails != null and !cocktails.empty}">
+            <div th:each="cocktail : ${cocktails}" class="cocktail-card"
+                 onclick="window.location.href='/cocktail/' + ${cocktail.id}">
+                <div class="card-image">
+                    <th:block th:if="${cocktail.image != null and cocktail.image != ''}">
+                        <img th:src="@{'/images/' + ${cocktail.image}}"
+                             th:alt="${cocktail.cocktailName}"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'emoji-fallback\'>🍸</div>';">
+                    </th:block>
+                    <th:block th:unless="${cocktail.image != null and cocktail.image != ''}">
+                        <div class="emoji-fallback">🍸</div>
+                    </th:block>
+                </div>
+
+                <div class="card-content">
+                    <div class="card-title" th:text="${cocktail.cocktailName}">Название коктейля</div>
+                    <div class="card-description" th:text="${cocktail.description != null and cocktail.description != '' ? cocktail.description : 'Вкусный коктейль по авторскому рецепту.'}">
+                        Описание
+                    </div>
+
+                    <div class="card-details">
+                        <div class="card-price">
+                            💎 <span th:text="${cocktail.price}">0</span> ₽
+                        </div>
+                        <div class="card-volume">
+                            🥤 <span th:text="${cocktail.volume}">0</span> мл
+                        </div>
+                        <div class="card-alcohol">
+                            🍺 <span th:text="${cocktail.vol}">0</span>°
+                        </div>
+                    </div>
+
+                    <!-- Превью ингредиентов -->
+                    <div class="ingredients-preview" th:if="${cocktail.assortements != null and !cocktail.assortements.empty}">
+                        <span class="ingredient-tag" th:each="ingredient : ${cocktail.assortements}"
+                              th:text="${ingredient.name}">Ингредиент</span>
+                    </div>
+                    <div class="ingredients-preview" th:unless="${cocktail.assortements != null and !cocktail.assortements.empty}">
+                        <span class="ingredient-tag">📝 Ингредиенты не добавлены</span>
+                    </div>
+
+                    <div class="click-hint">
+                        🔍 Кликните для подробного рецепта
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${cocktails == null or cocktails.empty}" class="empty-state">
+            🍸 <strong>Коктейли временно отсутствуют</strong><br>
+            Добавьте коктейли через админ-панель.<br>
+            Изображения кладите в папку: <code>src/main/resources/static/images/</code>
+        </div>
+
+        <div class="back-bottom">
+            <a th:href="@{/main}" class="back-flat">← НА ГЛАВНУЮ</a>
+            <a th:href="@{/create/cocktail}" class="create-btn" sec:authorize="hasRole('ADMIN')">✨ СОЗДАТЬ КОКТЕЙЛЬ</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Декоративный фон
+    const localBottles = [
+        '/images/vodka.png',
+        '/images/bottle.png',
+        '/images/finsky-ice.jpeg',
+        '/images/stakan.png',
+        '/images/redbull.png'
+    ];
+
+    const bgWall = document.getElementById('bottleWall');
+    for (let i = 0; i < 28; i++) {
+        const img = document.createElement('img');
+        img.classList.add('bg-bottle');
+        img.src = localBottles[i % localBottles.length];
+        img.onerror = function() { this.style.display = 'none'; };
+        const rot = (Math.random() - 0.5) * 12;
+        const sc = 0.7 + Math.random() * 0.7;
+        img.style.transform = `rotate(${rot}deg) scale(${sc})`;
+        img.style.width = `${120 + Math.random() * 70}px`;
+        bgWall.appendChild(img);
+    }
+
+    // Обработка ошибок загрузки изображений
+    document.addEventListener('DOMContentLoaded', function() {
+        const images = document.querySelectorAll('.card-image img');
+        images.forEach(img => {
+            img.addEventListener('error', function(e) {
+                const parent = this.parentElement;
+                if(parent && !parent.querySelector('.emoji-fallback')) {
+                    const fallbackDiv = document.createElement('div');
+                    fallbackDiv.className = 'emoji-fallback';
+                    fallbackDiv.innerHTML = '🍸';
+                    fallbackDiv.style.fontSize = '4rem';
+                    fallbackDiv.style.display = 'flex';
+                    fallbackDiv.style.alignItems = 'center';
+                    fallbackDiv.style.justifyContent = 'center';
+                    fallbackDiv.style.height = '100%';
+                    this.style.display = 'none';
+                    parent.appendChild(fallbackDiv);
+                }
+            });
+        });
+    });
+</script>
 
 </body>
 </html>

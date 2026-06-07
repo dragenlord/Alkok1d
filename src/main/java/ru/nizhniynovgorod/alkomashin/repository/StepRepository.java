@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 import ru.nizhniynovgorod.alkomashin.entity.Step;
 
 @Repository
-public interface StepEntityRepository extends JpaRepository<Step,Long> {
+public interface StepRepository extends JpaRepository<Step,Long> {
 }

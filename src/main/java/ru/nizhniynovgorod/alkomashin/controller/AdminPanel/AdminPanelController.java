@@ -8,9 +8,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.nizhniynovgorod.alkomashin.entity.Assortement;
+import ru.nizhniynovgorod.alkomashin.entity.dto.AssortementDTO;
+import ru.nizhniynovgorod.alkomashin.entity.dto.CocktailDTO;
 import ru.nizhniynovgorod.alkomashin.repository.AssortmentRepository;
 import ru.nizhniynovgorod.alkomashin.service.AssortimentService;
+import ru.nizhniynovgorod.alkomashin.service.CocktailService;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -19,11 +23,15 @@ import java.util.List;
 public class AdminPanelController {
 
     @Autowired
+    private final CocktailService cocktailService;
+    @Autowired
     private AssortimentService assortmentService;
     @Autowired
     private final AssortmentRepository assortmentRepository;
 
-    public AdminPanelController(AssortmentRepository assortmentRepository) {
+
+    public AdminPanelController(CocktailService cocktailService, AssortmentRepository assortmentRepository) {
+        this.cocktailService = cocktailService;
         this.assortmentRepository = assortmentRepository;
     }
 
@@ -39,34 +47,30 @@ public class AdminPanelController {
         return "create-assortment";
     }
 
-    @GetMapping("/step")
-    public String GetNewStep(){
-        return "create-step";
-    }
-
     @PostMapping("/cocktail")
-    public String CreateNewCocktail(){
+    public String CreateNewCocktail(@ModelAttribute CocktailDTO cocktailDTO,
+                                    @RequestParam(required = false) MultipartFile image,
+                                    @RequestParam("ingredientIds") List<Long> ingredientIds,
+                                    @RequestParam("ingredientAmounts") List<Integer> ingredientAmounts,
+                                    @RequestParam("stepDescriptions") List<String> stepDescriptions,
+                                    @RequestParam("stepTimes") List<Integer> stepTimes,
+                                    Model model){
+        cocktailDTO.setImage(image);
+        cocktailDTO.setIngredientIds(ingredientIds);
+        cocktailDTO.setIngredientAmounts(ingredientAmounts);
+        cocktailDTO.setStepDescriptions(stepDescriptions);
+        cocktailDTO.setStepTimes(stepTimes);
+        cocktailService.saveCocktail(cocktailDTO);
+        model.addAttribute("success", true);
         return "redirect:/main";
     }
 
-    @PostMapping("/assortments")
+    @PostMapping("/assortments")  // ← исправлено с /assortments на /assortment
     public String CreateNewAssortment(
-            @RequestParam("name") String name,
-            @RequestParam(value = "description",required = false) String description,
-            @RequestParam("price") int price,
-            @RequestParam("count") int count,
-            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            @ModelAttribute AssortementDTO assortmentDto,
             Model model
-            ){
-        String filename = imageFile.getOriginalFilename();
-
-        assortmentService.SaveAssortiment(name,description,price,count,imageFile);
-        assortmentService.saveImage(imageFile,filename);
-        return "redirect:/main";
-    }
-
-    @PostMapping("/Step")
-    public String CreateNewStep(){
+    ) throws IOException {
+        assortmentService.saveAssortiment(assortmentDto);  // ← сохраняем через DTO
         return "redirect:/main";
     }
 

@@ -15,10 +15,12 @@ public class Cocktail {
     private Long id;
 
     private String cocktailName;
+    private String description;
     private int vol;
     private int price;
     private int volume;
-    private String description;
+    private int count;
+    private String image;
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
@@ -26,7 +28,7 @@ public class Cocktail {
             joinColumns = @JoinColumn(name = "cocktail_id"),
             inverseJoinColumns = @JoinColumn(name = "ingredient_id")
     )
-    private List<Assortement> ingredients = new ArrayList<>();
+    private List<Assortement> assortements = new ArrayList<>();
 
     @OneToMany(mappedBy = "cocktail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Step> steps = new ArrayList<>();
